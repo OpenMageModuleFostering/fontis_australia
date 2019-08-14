@@ -23,79 +23,85 @@ if (!isset($argv[1]) or !isset($argv[2]) or !isset($argv[3])) {
     exit;
 }
 $mage_path = $argv[1];
-$product_id = $argv[2];
+$product_ids = $argv[2];
 $store_id = $argv[3];
 
 // Start-up Magento stack
 require_once $mage_path . '/app/Mage.php';
 Mage::app($store_id);
 
-// Load product, tax helper and generate final price information
-$product = Mage::getModel('catalog/product')->load($product_id);
-$tax = Mage::helper('tax');
-$final_price = $tax->getPrice($product, $product->getFinalPrice(), true);
-
 // This array is translated into XML when fed back to the cron parent PHP.
-$array = array();
+$products = array();
+foreach(unserialize($product_ids) as $product_id) {
+    // Load product, tax helper and generate final price information
+    $product = Mage::getModel('catalog/product')->load($product_id);
+    $tax = Mage::helper('tax');
+    $final_price = $tax->getPrice($product, $product->getFinalPrice(), true);
 
-$array['Code'] = $product->getId();
-$array['Name'] = htmlspecialchars($product->getName());
-$array['Price'] = $final_price;
-$array['Description'] = substr($product->getDescription(), 0, 255);
-$array['Product_URL'] = $product->getProductUrl();
-$array['Image_URL'] = (string)Mage::helper('catalog/image')->init($product, 'image');
+    // Array containing product data.
+    $array = array();
 
-$category_found = false;
-$array['Category'] = "";
-foreach($product->getCategoryCollection() as $c) {
-    $children = $c->getData('children_count');
-    if ($children <= 0) {
-        $array['Category'] = $c->getName();
+    $array['Code'] = $product->getId();
+    $array['Name'] = utf8_encode(htmlspecialchars($product->getName()));
+    $array['Price'] = $final_price;
+    $array['Description'] = utf8_encode(substr(strip_tags($product->getShortDescription()), 0, 255));
+    $array['Product_URL'] = utf8_encode($product->getProductUrl());
+    $array['Image_URL'] = utf8_encode((string)Mage::helper('catalog/image')->init($product, 'image'));
 
-        $loaded_categories = Mage::getModel('catalog/category')
-            ->getCollection()
-            ->addIdFilter(array($c->getId()))
-            ->addAttributeToSelect(array('name'), 'inner')->load();
+    $category_found = false;
+    $array['Category'] = "";
+    foreach($product->getCategoryCollection() as $c) {
+        $children = $c->getData('children_count');
+        if ($children <= 0) {
+            $array['Category'] = utf8_encode($c->getName());
 
-        foreach($loaded_categories as $loaded_category) {
-            $array['Category'] = $loaded_category->getName();
+            $loaded_categories = Mage::getModel('catalog/category')
+                ->getCollection()
+                ->addIdFilter(array($c->getId()))
+                ->addAttributeToSelect(array('name'), 'inner')->load();
+
+            foreach($loaded_categories as $loaded_category) {
+                $array['Category'] = utf8_encode($loaded_category->getName());
+            }
+            $category_found = true;
         }
-        $category_found = true;
     }
-}
-if (!$category_found) {
-    $array['Category'] = Mage::getStoreConfig('fontis_feeds/myshoppingfeed/defaultcategory');
-}
+    if (!$category_found) {
+        $array['Category'] = utf8_encode(Mage::getStoreConfig('fontis_feeds/myshoppingfeed/defaultcategory'));
+    }
 
-if ($product->isSaleable()) {
-    $array['InStock'] = 'Y';
-} else {
-    $array['InStock'] = 'N';
-}
+    if ($product->isSaleable()) {
+        $array['InStock'] = 'Y';
+    } else {
+        $array['InStock'] = 'N';
+    }
 
-$manufacturer_name = $product->getResource()->getAttribute('manufacturer')->getFrontend()->getValue($product);
+    $manufacturer_name = utf8_encode($product->getResource()->getAttribute('manufacturer')->getFrontend()->getValue($product));
 
-if ($manufacturer_name == 'No') {
-    $array['Brand'] = 'Generic';
-} else {
-    $array['Brand'] = $manufacturer_name;
-}
+    if ($manufacturer_name == 'No') {
+        $array['Brand'] = 'Generic';
+    } else {
+        $array['Brand'] = $manufacturer_name;
+    }
 
-$linkedAttributes = @unserialize(Mage::getStoreConfig('fontis_feeds/myshoppingfeed/m_to_xml_attributes', $store_id));
-if(!empty($linkedAttributes))
-{
-    foreach($linkedAttributes as $la)
+    $linkedAttributes = @unserialize(Mage::getStoreConfig('fontis_feeds/myshoppingfeed/m_to_xml_attributes', $store_id));
+    if(!empty($linkedAttributes))
     {
-        $magentoAtt = $la['magento'];
-        $xmlAtt = $la['xmlfeed'];
+        foreach($linkedAttributes as $la)
+        {
+            $magentoAtt = $la['magento'];
+            $xmlAtt = $la['xmlfeed'];
 
-        $value = $product->getResource()->getAttribute($magentoAtt)->getFrontend()->getValue($product);
+            $value = $product->getResource()->getAttribute($magentoAtt)->getFrontend()->getValue($product);
 
-        if ($value != "") {
-            $array[$xmlAtt] = htmlspecialchars($value);
+            if ($value != "") {
+                $array[$xmlAtt] = utf8_encode(htmlspecialchars($value));
+            }
         }
     }
+
+    $products[] = $array;
 }
 
 // Serialize and print as a string for the cron parent PHP code to grab.
-echo serialize($array);
+echo json_encode($products);

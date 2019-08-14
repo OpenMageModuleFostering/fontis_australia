@@ -19,38 +19,74 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-function addProductXmlCallback($args)
+// Callback used by the Magento resource iterator walk() method. Adds a
+// product ID to a static array and calls addProductXmlMyShopping() to
+// generate XML when the array reaches the batch size.
+function addProductXmlCallbackMyShopping($args)
 {
-    $product = $args['product'];
-    $product->setData($args['row']);
-    addProductXml($product);
+    Fontis_Australia_Model_MyShopping_Cron::$accumulator[] = $args['row']['entity_id']; 
+    
+    $length = count(Fontis_Australia_Model_MyShopping_Cron::$accumulator);
+    if($length >= Fontis_Australia_Model_MyShopping_Cron::BATCH_SIZE) {
+        addProductXmlMyShopping();
+    }
 }
 
-function addProductXml($product)
+// Runs a subprocesss to create feed XML for the product IDs in the static
+// array, then empties the array.
+function addProductXmlMyShopping()
 {
-    $product_id = $product->getId();
-    $store_id = Fontis_Australia_Model_MyShopping_Cron::$store->getId();
+    $length = count(Fontis_Australia_Model_MyShopping_Cron::$accumulator);
+    if($length > 0) {
+        Mage::log("Processing product IDs " . Fontis_Australia_Model_MyShopping_Cron::$accumulator[0] .
+                " to " . Fontis_Australia_Model_MyShopping_Cron::$accumulator[$length - 1]);
+        $store_id = Fontis_Australia_Model_MyShopping_Cron::$store->getId();
 
-    $data = exec("php " . Mage::getBaseDir() . "/app/code/community/Fontis/Australia/Model/Myshopping/Child.php " . Mage::getBaseDir() . " " . $product_id . " " . $store_id);
-    $array = unserialize($data);
+        $data = exec("php " . Mage::getBaseDir() . "/app/code/community/Fontis/Australia/Model/Myshopping/Child.php " .
+                Mage::getBaseDir() . " '" . serialize(Fontis_Australia_Model_MyShopping_Cron::$accumulator) .
+                "' " . $store_id);
+        Fontis_Australia_Model_MyShopping_Cron::$accumulator = array();
+        
+        $array = json_decode($data, true);
 
-    $product_node = Fontis_Australia_Model_Myshopping_Cron::$root_node->addChild('product');
-
-    Mage::log(var_export($array, true));
-
-    foreach($array as $key => $val) {
-        $product_node->addChild($key, $val);
+        if(is_array($array)) {
+            $codes = array();
+            foreach($array as $prod) {
+                Fontis_Australia_Model_MyShopping_Cron::$debugCount += 1;
+                $product_node = Fontis_Australia_Model_Myshopping_Cron::$root_node->addChild('product');
+                foreach($prod as $key => $val) {
+                    if($key == 'Code') {
+                        $codes[] = $val;
+                    }
+                    $product_node->addChild($key, htmlspecialchars($val));
+                }
+            }
+            if(!empty($codes)) {
+                Mage::log("Codes: ".implode(",", $codes));
+            }
+        } else {
+            Mage::log("Could not unserialize to array:");
+            Mage::log($data);
+            Mage::log($array);
+        }
+        
+        Mage::log(strlen($data) . " characters returned");
     }
 }
 
 class Fontis_Australia_Model_MyShopping_Cron
 {
+    const BATCH_SIZE = 100;
+    
     public static $doc;
     public static $root_node;
     public static $store;
+    public static $accumulator;
+    public static $debugCount = 0;
 
     protected function _construct()
     {
+        self::$accumulator = array();
     }
 
     protected function getPath()
@@ -69,8 +105,6 @@ class Fontis_Australia_Model_MyShopping_Cron
 
     public static function update()
     {
-        session_start();
-
         Mage::log('Fontis/Australia_Model_MyShopping_Cron: entered update function');
         if (Mage::getStoreConfig('fontis_feeds/myshoppingfeed/active')) {
             $io = new Varien_Io_File();
@@ -81,11 +115,14 @@ class Fontis_Australia_Model_MyShopping_Cron
             foreach(Mage::app()->getStores() as $store) {
                 Mage::log('for each store');
                 $clean_store_name = str_replace('+', '-', strtolower(urlencode($store->getName())));
+                Fontis_Australia_Model_MyShopping_Cron::$debugCount = 0;
                 $products_result = self::getProductsXml($store);
 
                 // Write the entire products xml file:
-                $io->write($clean_store_name . '-products.xml', $products_result['xml']);
-                Mage::log('successful write?');
+                $filename = $clean_store_name . '-products.xml';
+                $io->write($filename, $products_result['xml']);
+                Mage::log("Wrote " . Fontis_Australia_Model_MyShopping_Cron::$debugCount
+                        . " records to " . self::getPath() . $filename);
             }
 
             $io->close();
@@ -110,21 +147,6 @@ class Fontis_Australia_Model_MyShopping_Cron
         $products->addStoreFilter();
         $products->addAttributeToSelect('*');
 
-        $attributes_select_array = array('name', 'price', 'image', 'status');
-        $linkedAttributes = @unserialize(Mage::getStoreConfig('fontis_feeds/myshoppingfeed/m_to_xml_attributes', $store->getId()));
-        if(!empty($linkedAttributes))
-        {
-            foreach($linkedAttributes as $la)
-            {
-                if (strpos($la['magento'], 'FONTIS') === false) {
-                    $attributes_select_array[] = $la['magento'];
-                }
-            }
-        }
-
-        $products->addAttributeToSelect($attributes_select_array, 'left');
-        $products->addAttributeToFilter('type_id', 'simple');
-
         Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($products);
         Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($products);
 
@@ -136,11 +158,19 @@ class Fontis_Australia_Model_MyShopping_Cron
         self::$doc = new SimpleXMLElement('<productset></productset>');
         self::$root_node = self::$doc;
 
-        Mage::log('about to walk');
-        Mage::getSingleton('core/resource_iterator')->walk($products->getSelect(), array('addProductXmlCallback'), array('product' => $product));
-        Mage::log('walked');
+        Mage::log("About to walk {$products->getSize()} products...");
+        Mage::getSingleton('core/resource_iterator')->walk($products->getSelect(), array('addProductXmlCallbackMyShopping'));
+        // call XML generation function one last time to process remaining batch
+        addProductXmlMyShopping();
+        Mage::log('Walked');
 
-        $result['xml'] = self::$doc->asXml();
+        $dom = new DOMDocument('1.0');
+        $dom->preserveWhiteSpace = false;
+        $dom->formatOutput = true;
+        $dom_sxml = dom_import_simplexml(self::$doc);
+        $dom_sxml = $dom->importNode($dom_sxml, true);
+        $dom->appendChild($dom_sxml);
+        $result['xml'] = $dom->saveXML();
         return $result;
     }
 }
