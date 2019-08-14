@@ -275,6 +275,24 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 		return $method;
     }
     
+    protected function _curl_get_file_contents($url)
+    {
+        $c = curl_init();
+        curl_setopt($c, CURLOPT_RETURNTRANSFER, 1);
+        curl_setopt($c, CURLOPT_URL, $url);
+        $contents = curl_exec($c);
+        curl_close($c);
+            
+        if ($contents)
+        {
+            return $contents;
+        }
+        else
+        {
+            return false;
+        }
+    }
+    
 	protected function _drcRequest($service, $fromPostCode, $toPostCode, $destCountry, $weight, $length, $width, $height, $num_boxes)
 	{
 		// Construct the appropriate URL and send all the information
@@ -290,7 +308,38 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 			"&Length=" . $length .
 			"&Quantity=" . $num_boxes;
 
-		$drc_result = file($url);
+		if(ini_get('allow_url_fopen'))
+        {
+            Mage::log('Using fopen URL wrappers', null, 'fontis_australia.log');
+            $drc_result = file($url);
+        }
+        else if(extension_loaded('curl'))
+        {
+            Mage::log('fopen URL wrappers unavailable, using curl', null, 'fontis_australia.log');
+            try {
+                $drc_result = $this->_curl_get_file_contents($url);
+            } catch(Exception $e) {
+                Mage::log($e);
+                $drc_result = array();
+                $drc_result['err_msg'] = 'FAIL';
+            }
+
+            $drc_result = explode("\n",$drc_result);
+                                                
+            //clean up array
+            foreach($drc_result as $k => $vals) {
+                if($vals == '') unset($drc_result[$k]);
+            }
+        }
+        else
+        {
+            Mage::log('No download method available, could not contact DRC!', null, 'fontis_australia.log');
+            $a = array();
+            $a['err_msg'] = 'FAIL';
+            return $a;
+        }
+        Mage::log("DRC result: " . $drc_result, null, 'fontis_australia.log');
+
 		$result = array();
 		foreach($drc_result as $vals)
 		{
