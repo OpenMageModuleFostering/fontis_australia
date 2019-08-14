@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>1.2</version>
+            <version>1.2.2</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
