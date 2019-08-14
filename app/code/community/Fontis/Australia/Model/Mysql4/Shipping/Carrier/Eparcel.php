@@ -12,7 +12,9 @@
  * obtain it through the world-wide-web, please send an email
  * to license@magentocommerce.com so we can send you a copy immediately.
  *
- * Originally based on Magento Tablerate Shipping code.
+ * Originally based on Magento Tablerate Shipping code and Auctionmaid Matrixrate.
+ * @copyright  Copyright (c) 2008 Auction Maid (http://www.auctionmaid.com)
+ * @author     Karen Baker <enquiries@auctionmaid.com>
  *
  * @category   Fontis
  * @package    Fontis_Australia
@@ -21,13 +23,6 @@
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
 
-/**
- * Shipping table rates
- *
- * @category   Mage
- * @package    Mage_Shipping
- * @author      Magento Core Team <core@magentocommerce.com>
- */
 class Fontis_Australia_Model_Mysql4_Shipping_Carrier_Eparcel extends Mage_Core_Model_Mysql4_Abstract
 {
     protected function _construct()
@@ -35,77 +30,12 @@ class Fontis_Australia_Model_Mysql4_Shipping_Carrier_Eparcel extends Mage_Core_M
         $this->_init('australia/eparcel', 'pk');
     }
 
-    /*public function getRate(Mage_Shipping_Model_Rate_Request $request)
-    {
-        Mage::log(var_export($request->getConditionName(), true));
-        
-        try
-        {
-
-        $read = $this->_getReadAdapter();
-        $write = $this->_getWriteAdapter();
-
-        $select = $read->select()->from($this->getMainTable());
-
-        $select->where(
-            $read->quoteInto(" (dest_country_id=? ", $request->getDestCountryId()).
-                $read->quoteInto(" AND dest_region_id=? ", $request->getDestRegionId()).
-                $read->quoteInto(" AND dest_zip=?) ", $request->getDestPostcode()).
-
-            $read->quoteInto(" OR (dest_country_id=? ", $request->getDestCountryId()).
-                $read->quoteInto(" AND dest_region_id=? AND dest_zip='') ", $request->getDestRegionId()).
-
-            $read->quoteInto(" OR (dest_country_id=? AND dest_region_id='0' AND dest_zip='') ", $request->getDestCountryId()).
-
-            $read->quoteInto(" OR (dest_country_id=? AND dest_region_id='0' ", $request->getDestCountryId()).
-                $read->quoteInto("  AND dest_zip=?) ", $request->getDestPostcode()).
-
-            " OR (dest_country_id='0' AND dest_region_id='0' AND dest_zip='')"
-        );
-
-        if (is_array($request->getConditionName())) {
-            $i = 0;
-            foreach ($request->getConditionName() as $conditionName) {
-                if ($i == 0) {
-                    $select->where('condition_name=?', $conditionName);
-                } else {
-                    $select->orWhere('condition_name=?', $conditionName);
-                }
-                $select->where('condition_from_value<=?', $request->getData($conditionName));
-                $i++;
-            }
-        } else {
-            $select->where('condition_name=?', $request->getConditionName());
-            $select->where('condition_from_value<=?', $request->getData($request->getConditionName()));
-        }
-        $select->where('website_id=?', $request->getWebsiteId());
-
-        $select->order('dest_country_id DESC');
-        $select->order('dest_region_id DESC');
-        $select->order('dest_zip DESC');
-        $select->order('condition_from_value DESC');
-        $select->limit(1);
-
-        // pdo has an issue. we cannot use bind
-        $row = $read->fetchRow($select);
-        Mage::log($row);
-
-        return $row;
-
-        }
-        catch(Exception $e)
-        {   
-            Mage::log($e->getMessage());
-        }
-    }*/
-
     public function getRate(Mage_Shipping_Model_Rate_Request $request)
     {
         $read = $this->_getReadAdapter();
         $write = $this->_getWriteAdapter();
 
 		$postcode = $request->getDestPostcode();
-        //$table = Mage::getSingleton('core/resource')->getTableName('matrixrate_shipping/matrixrate');
         $table = $this->getMainTable();
 
         $insuranceStep = (float)Mage::getConfig()->getNode('default/carriers/eparcel/insurance_step');
@@ -121,7 +51,6 @@ class Fontis_Australia_Model_Mysql4_Shipping_Carrier_Eparcel extends Mage_Core_M
         Mage::log($request->getDestRegionId());
         Mage::log($postcode);
         Mage::log(var_export($request->getConditionName(), true));
-        //Mage::log();
 		
         for ($j=0;$j<5;$j++)
 		{
@@ -189,8 +118,6 @@ class Fontis_Australia_Model_Mysql4_Shipping_Carrier_Eparcel extends Mage_Core_M
             $select->order('condition_from_value DESC');
 
             // pdo has an issue. we cannot use bind
-
-            //Mage::log(var_export($select, true));
 
             $newdata=array();
             Mage::log($select->__toString());
@@ -301,23 +228,10 @@ class Fontis_Australia_Model_Mysql4_Shipping_Carrier_Eparcel extends Mage_Core_M
                         ->addCountryFilter($countryCodesIso2)
                         ->load();
 
-                    //print("<pre>");
-                    //print_r($regionCollection->getItems());
-                    //print("</pre>");
-                    //die;
-
-                    /*foreach ($regionCollection->getItems() as $region) {
-                        $regionCodesToIds[$countryCodesToIds[$region->getData('country_id')]][$region->getData('code')] = $region->getData('region_id');
-                    }*/
                     foreach ($regionCollection->getItems() as $region) {
                         $regionCodesToIds[$region->getData('code')] = $region->getData('region_id');
                     }
 
-                    //print("<pre>");
-                    //print_r($regionCodesToIds);
-                    //print("</pre>");
-                    //die;
-                    
                     foreach ($csvLines as $k=>$csvLine) {
                         $csvLine = $this->_getCsvValues($csvLine);
 
@@ -330,16 +244,6 @@ class Fontis_Australia_Model_Mysql4_Shipping_Carrier_Eparcel extends Mage_Core_M
                             $countryId = $countryCodesToIds[$csvLine[0]];
                         }
 
-                        /*if (empty($regionCodesToIds[$countryCodesToIds[$csvLine[0]]])
-                            || !array_key_exists($csvLine[1], $regionCodesToIds[$countryCodesToIds[$csvLine[0]]])) {
-                            $regionId = '0';
-                            if ($csvLine[1] != '*' && $csvLine[1] != '') {
-                                $exceptions[] = Mage::helper('shipping')->__('Invalid Region/State "%s" in the Row #%s', $csvLine[1], ($k+1));
-                            }
-                        } else {
-                            $regionId = $regionCodesToIds[$countryCodesToIds[$csvLine[0]]][$csvLine[1]];
-                        }*/
-                        
                         if (empty($regionCodesToIds) || !array_key_exists($csvLine[1], $regionCodesToIds)) {
                             $regionId = '0';
                             if ($csvLine[1] != '*' && $csvLine[1] != '') {

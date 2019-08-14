@@ -12,7 +12,9 @@
  * obtain it through the world-wide-web, please send an email
  * to license@magentocommerce.com so we can send you a copy immediately.
  *
- * Originally based on Magento Tablerate Shipping code.
+ * Originally based on Magento Tablerate Shipping code and Auctionmaid Matrixrate.
+ * @copyright  Copyright (c) 2008 Auction Maid (http://www.auctionmaid.com)
+ * @author     Karen Baker <enquiries@auctionmaid.com>
  *
  * @category   Fontis
  * @package    Fontis_Australia
