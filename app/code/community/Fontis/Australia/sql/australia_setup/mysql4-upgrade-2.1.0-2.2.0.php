@@ -15,18 +15,13 @@
  * @category   Fontis
  * @package    Fontis_Australia
  * @author     Chris Norton
- * @copyright  Copyright (c) 2008 Fontis Pty. Ltd. (http://www.fontis.com.au)
+ * @copyright  Copyright (c) 2010 Fontis Pty. Ltd. (http://www.fontis.com.au)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-?>
-<fieldset class="form-list">
-    <ul id="payment_form_<?php echo $this->getMethodCode(); ?>" style="display:none">
-        <li>
-            <?php if ($this->getMethod()->getMessage()): ?>
-            <div class="input-box">
-               	<p><?php echo $this->getMethod()->getMessage(); ?></p>
-            </div>
-            <?php endif; ?>
-        </li>
-    </ul>
-</fieldset>
+
+$installer = $this;
+$installer->startSetup();
+
+$installer->run("RENAME TABLE {$this->getTable('au_postcode')} TO {$this->getTable('australia_postcode')}");
+
+$installer->endSetup();

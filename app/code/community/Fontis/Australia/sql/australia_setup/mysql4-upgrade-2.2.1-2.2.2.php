@@ -14,15 +14,18 @@
  *
  * @category   Fontis
  * @package    Fontis_Australia
- * @author     Chris Norton
- * @copyright  Copyright (c) 2008 Fontis Pty. Ltd. (http://www.fontis.com.au)
+ * @author     Jonathan Melnick
+ * @copyright  Copyright (c) 2012 Doghouse Media Pty Ltd (http://www.dhmedia.com.au)
  * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
  */
-?>
-<p><?php echo $this->getMethod()->getTitle() ?>
-<?php //if($this->getInfo()->getAdditionalData()): ?>
-    <?php if($this->getAccountName()): ?><br /><?php echo $this->__('Account Name: %s', $this->getAccountName()); ?><?php endif; ?>
-	<?php if($this->getAccountBSB()): ?><br /><?php echo $this->__('Account BSB: %s', $this->getAccountBSB()); ?><?php endif; ?>
-	<?php if($this->getAccountNumber()): ?><br /><?php echo $this->__('Account Number: %s', $this->getAccountNumber()); ?><?php endif; ?>
-<?php //endif;?>
-</p>
+
+$installer = $this;
+$installer->startSetup();
+
+$installer->run(
+    "ALTER TABLE `australia_eparcel`" 
+    . " ADD `charge_code_individual` VARCHAR( 50 ) NULL DEFAULT NULL,"
+    . " ADD `charge_code_business` VARCHAR( 50 ) NULL DEFAULT NULL"
+);
+
+$installer->endSetup();
