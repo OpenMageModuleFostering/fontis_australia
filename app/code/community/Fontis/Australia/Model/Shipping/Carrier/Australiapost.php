@@ -78,63 +78,228 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 		// on destination country.
 		if($destCountry == "AU")
 		{
-			$shipping_methods = array("STANDARD", "EXPRESS");
+			//============= Domestic Shipping ==================
+			$shipping_methods = array('STANDARD', 'EXPRESS');
+
+		    foreach($shipping_methods as $shipping_method)
+		    {
+				$drc = $this->_drcRequest($shipping_method, $frompcode, $topcode, $destCountry, $sweight, $slength, $swidth, $sheight, $shipping_num_boxes);
+
+				if($drc['err_msg'] == 'OK')
+				{
+					// Check for registered post activation. If so, add extra options
+					if($this->getConfigData('registered_post'))
+					{
+						$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+						$title = $this->getConfigData('name') . " " . 
+								ucfirst(strtolower($shipping_method)) . 
+								$title_days;
+								
+						$charge = $drc['charge'];
+						$charge += $this->getConfigData('registered_post_charge');
+						
+						if($this->getConfigData('person_to_person'))
+						{
+							$charge += 5.50;
+						}
+						elseif($this->getConfigData('delivery_confirmation'))
+						{
+							$charge += 1.85;
+						}
+						
+						$method = $this->_createMethod($request, $shipping_method, $title, $charge, $charge);
+						$result->append($method);
+					
+						// Insurance only covers up to $5000 worth of goods.
+						$packageValue = ($request->getPackageValue() > 5000) ? 5000 : $request->getPackageValue();
+					
+						// Insurance cost is $1.25 per $100 or part thereof. First $100 is
+						// included in normal registered post costs.
+						$insurance = (ceil($packageValue / 100) - 1) * 1.25;
+						$charge += $insurance;
+					
+						$title = $this->getConfigData('name') . " " . ucfirst(strtolower($shipping_method)) . ' with Extra Cover';
+						$method = $this->_createMethod($request, $shipping_method, $title, $charge, $charge);
+						$result->append($method);
+					}
+					else
+					{
+						$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+						$title = $this->getConfigData('name') . " " . 
+								ucfirst(strtolower($shipping_method)) . 
+								$title_days;
+						
+						$method = $this->_createMethod($request, $shipping_method, $title, $drc['charge'], $drc['charge']);
+						$result->append($method);
+					}
+				}
+			}
 		}
 		else
 		{
-			$shipping_methods = array("SEA", "AIR");
-		}
-
-        foreach($shipping_methods as $shipping_method)
-        {
-        	// Construct the appropriate URL and send all the information
-        	// to the Australia Post DRC.
-	        $url = "http://drc.edeliver.com.au/ratecalc.asp?" . 
-	        	"Pickup_Postcode=" . $frompcode .
-	        	"&Destination_Postcode=" . $topcode .
-	        	"&Country=" . $destCountry .
-	        	"&Weight=" . $sweight .
-	        	"&Service_Type=" . $shipping_method . 
-	        	"&Height=" . $sheight . 
-	        	"&Width=" . $swidth . 
-	        	"&Length=" . $slength .
-	        	"&Quantity=" . $shipping_num_boxes;
-	        	
-			$drc_result = file($url);
-			foreach($drc_result as $vals)
+			//============= International Shipping ==================		
+			// International shipping options are highly dependent upon whether 
+			// or not you are using registered post.
+			if($this->getConfigData('registered_post'))
 			{
-					$tokens = split("=", $vals);
-					$$tokens[0] = $tokens[1];
-			}
+				//============= Registered Post ================
+				// Registered Post International
+				// Same price as Air Mail, plus $5. Extra cover is not available.
+				// A weight limit of 2kg applies.				
+				if($sweight <= 2000)
+				{
+					$drc = $this->_drcRequest('AIR', $frompcode, $topcode, $destCountry, $sweight, $slength, $swidth, $sheight, $shipping_num_boxes);
 			
-			// Check that the DRC returned without error.
-			if(trim($err_msg) == "OK")
-			{
-				$shippingPrice = $request->getBaseCurrency()->convert($charge, $request->getPackageCurrency());
-
-				$shippingPrice += $this->getConfigData('handling_fee');
-
-				$method = Mage::getModel('shipping/rate_result_method');
-
-				$method->setCarrier('australiapost');
-				$method->setCarrierTitle($this->getConfigData('title'));
-
-				$method->setMethod($shipping_method);
-				$title_days = ($days == 1) ? " (1 day)" : " ($days days)";
-				$title = $this->getConfigData('name') . " " . 
-						ucfirst(strtolower($shipping_method)) . 
-						$title_days;
-				$method->setMethodTitle($title);
-
-				$method->setPrice($shippingPrice);
-				$method->setCost($shippingPrice);
-
-				$result->append($method);
+					if($drc['err_msg'] == 'OK')
+					{
+						$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+						$title = $this->getConfigData('name') . ' Registered Post International' . $title_days;
+							
+						// RPI is another 5 dollars.
+						$charge = $drc['charge'] + 5;
+						
+						if($this->getConfigData('delivery_confirmation'))
+						{
+							$charge += 3.30;
+						}
+						
+						$charge += $this->getConfigData('registered_post_charge');
+			
+						$method = $this->_createMethod($request, 'AIR', $title, $charge, $charge);
+						$result->append($method);
+					}
+				}
+				
+				// Express Post International
+				$drc = $this->_drcRequest('EPI', $frompcode, $topcode, $destCountry, $sweight, $slength, $swidth, $sheight, $shipping_num_boxes);
+			
+				if($drc['err_msg'] == 'OK')
+				{
+					$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+					$title = $this->getConfigData('name') . ' Express Post International' . $title_days;
+					
+					$charge = $drc['charge'];
+					
+					if($this->getConfigData('delivery_confirmation'))
+					{
+						$charge += 3.30;
+					}
+					
+					$charge += $this->getConfigData('registered_post_charge');
+			
+					$method = $this->_createMethod($request, 'EPI', $title, $charge, $charge);
+					$result->append($method);
+					
+					// Insurance only covers up to $5000 worth of goods.
+					$packageValue = ($request->getPackageValue() > 5000) ? 5000 : $request->getPackageValue();
+				
+					// Insurance cost is $2.25 per $100 or part thereof. First $100 is $8.45.
+					$insurance = 8.45 + (ceil($packageValue / 100) - 1) * 1.25;
+					$charge += $insurance;
+					
+					$title = $this->getConfigData('name') . ' Express Post International with Extra Cover';
+					$method = $this->_createMethod($request, 'EPI-EC', $title, $charge, $charge);
+					$result->append($method);
+				}
+				
+				// Express Courier International
+				// TODO: Create a table for this method.
 			}
+			else
+			{
+				//============= Standard Post ================
+				// Sea Shipping
+				$drc = $this->_drcRequest('SEA', $frompcode, $topcode, $destCountry, $sweight, $slength, $swidth, $sheight, $shipping_num_boxes);
+			
+				if($drc['err_msg'] == 'OK')
+				{
+					$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+					$title = $this->getConfigData('name') . ' Sea Mail' . 
+							$title_days;
+			
+					$method = $this->_createMethod($request, 'SEA', $title, $drc['charge'], $drc['charge']);
+					$result->append($method);
+				}
+			
+				// Air Mail
+				$drc = $this->_drcRequest('AIR', $frompcode, $topcode, $destCountry, $sweight, $slength, $swidth, $sheight, $shipping_num_boxes);
+			
+				if($drc['err_msg'] == 'OK')
+				{
+					$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+					$title = $this->getConfigData('name') . ' Air Mail' . 
+							$title_days;
+			
+					$method = $this->_createMethod($request, 'AIR', $title, $drc['charge'], $drc['charge']);
+					$result->append($method);
+				}
+			
+				// Express Post International
+				$drc = $this->_drcRequest('EPI', $frompcode, $topcode, $destCountry, $sweight, $slength, $swidth, $sheight, $shipping_num_boxes);
+			
+				if($drc['err_msg'] == 'OK')
+				{
+					$title_days = ($drc['days'] == 1) ? ' (1 day)' : ' (' . $drc['days'] . ' days)';
+					$title = $this->getConfigData('name') . ' Express Post International' . 
+							$title_days;
+			
+					$method = $this->_createMethod($request, 'EPI', $title, $drc['charge'], $drc['charge']);
+					$result->append($method);
+				}
+							
+				// Express Courier International
+				// TODO: Create a table for this method.		
+			}
+
 		}
-		
+				
         return $result;
     }
+    
+    protected function _createMethod($request, $method_code, $title, $price, $cost)
+    {
+		$shippingPrice = $request->getBaseCurrency()->convert($price, $request->getPackageCurrency());
+		$shippingCost = $request->getBaseCurrency()->convert($cost, $request->getPackageCurrency());
+
+		$method = Mage::getModel('shipping/rate_result_method');
+
+		$method->setCarrier('australiapost');
+		$method->setCarrierTitle($this->getConfigData('title'));
+
+		$method->setMethod($method_code);
+		$method->setMethodTitle($title);
+
+		$method->setPrice($this->getFinalPriceWithHandlingFee($shippingPrice));
+		$method->setCost($shippingCost);
+		
+		return $method;
+    }
+    
+	protected function _drcRequest($service, $fromPostCode, $toPostCode, $destCountry, $weight, $length, $width, $height, $num_boxes)
+	{
+		// Construct the appropriate URL and send all the information
+		// to the Australia Post DRC.
+		$url = "http://drc.edeliver.com.au/ratecalc.asp?" . 
+			"Pickup_Postcode=" . $fromPostCode .
+			"&Destination_Postcode=" . $toPostCode .
+			"&Country=" . $destCountry .
+			"&Weight=" . $weight .
+			"&Service_Type=" . $service . 
+			"&Height=" . $height . 
+			"&Width=" . $width . 
+			"&Length=" . $length .
+			"&Quantity=" . $num_boxes;
+
+		$drc_result = file($url);
+		$result = array();
+		foreach($drc_result as $vals)
+		{
+			$tokens = split("=", $vals);
+			$result[$tokens[0]] = trim($tokens[1]);
+		}
+		
+		return $result;
+	}
 
     /**
      * Get allowed shipping methods

@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>1.0</version>
+            <version>1.1</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
@@ -33,57 +33,77 @@
         </Fontis_Australia>
     </modules>
     <global>
-    	<models>
-    		<australia>
-	    		<class>Fontis_Australia_Model</class>
-	    	</australia>
-    	</models>
-    	<helpers>
-    		<australia>
-    			<class>Fontis_Australia_Helper</class>
-    		</australia>
-    	</helpers>
-    	<blocks>
-            <australia>
-            	<class>Fontis_Australia_Block</class>
-            </australia>
-        </blocks>
-        <resources>
-            <australia_setup>
-                <setup>
-                    <module>Fontis_Australia</module>
-                </setup>
-                <connection>
-                    <use>directory_setup</use>
-                </connection>
-            </australia_setup>
-            <australia_write>
-                <connection>
-                    <use>local_write</use>
-                </connection>
-            </australia_write>
-            <australia_read>
-                <connection>
-                    <use>local_read</use>
-                </connection>
-            </australia_read>
-        </resources>
-        <sales>
-            <shipping>
-                <carriers>
-                    <australiapost>
-                        <class>Fontis_Australia_Model_Shipping_Carrier_Australiapost</class>
-                    </australiapost>
-                </carriers>
-            </shipping>
-            <tax>
-                <methods>
-                    <gst>
-                        <class>Fontis_Australia_Model_Tax_Gst</class>
-                    </gst>
-                </methods>
-            </tax>
-        </sales>
+		<models>
+			<australia>
+				<class>Fontis_Australia_Model</class>
+				<resourceModel>australia_mysql4</resourceModel>
+			</australia>
+			<australia_mysql4>
+				<class>Fontis_Australia_Model_Mysql4</class>
+				<entities>
+					<eparcel>
+						<table>australia_eparcel</table>
+					</eparcel>
+				</entities>
+			</australia_mysql4>
+		</models>
+		<helpers>
+			<australia>
+				<class>Fontis_Australia_Helper</class>
+			</australia>
+		</helpers>
+		<blocks>
+			<australia>
+				<class>Fontis_Australia_Block</class>
+			</australia>
+		</blocks>
+		<resources>
+			<australia_setup>
+				<setup>
+				    <module>Fontis_Australia</module>
+				</setup>
+				<connection>
+				    <use>directory_setup</use>
+				</connection>
+			</australia_setup>
+			<australia_write>
+				<connection>
+				    <use>core_write</use>
+				</connection>
+			</australia_write>
+			<australia_read>
+				<connection>
+				    <use>core_read</use>
+				</connection>
+			</australia_read>
+		</resources>
+		<sales>
+			<shipping>
+				<carriers>
+				    <australiapost>
+				        <class>Fontis_Australia_Model_Shipping_Carrier_Australiapost</class>
+				    </australiapost>
+				</carriers>
+			</shipping>
+			<tax>
+				<methods>
+				    <gst>
+				        <class>Fontis_Australia_Model_Tax_Gst</class>
+				    </gst>
+				</methods>
+			</tax>
+		</sales>
+		<events>
+			<sales_order_shipment_save_after>
+				<observers>
+					<fontis_australia_shipment_save>
+						<type>singleton</type>
+						<class>australia/shipping_carrier_eparcel</class>
+						<method>sendManifest</method>
+					</fontis_australia_shipment_save>
+				</observers>
+			</sales_order_shipment_save_after>
+		</events>
     </global>
     <frontend>
         <routers>
@@ -112,7 +132,30 @@
 				<title>Australia Post</title>
 				<name></name>
 				<weight_units>1000</weight_units>
+				<registered_post>0</registered_post>
+				<registered_post_charge>2.75</registered_post_charge>
+				<delivery_confirmation>0</delivery_confirmation>
+				<person_to_person>0</person_to_person>
 			</australiapost>
+			<eparcel>
+				<active>0</active>
+				<sallowspecific>0</sallowspecific>
+				<condition_name>package_weight</condition_name>
+				<model>australia/shipping_carrier_eparcel</model>
+				<name>eParcel</name>
+				<title>Australia Post eParcel</title>
+				<sallowspecific>1</sallowspecific>
+				<specificcountry>AU</specificcountry>
+				<specificerrmsg>This shipping method is currently unavailable. If you would like to ship using this shipping method, please contact us.</specificerrmsg>
+				<handling_type>F</handling_type>
+				<merchant_location_id>AWV</merchant_location_id>
+				<charge_code>S2</charge_code>
+				<post_charge_account>1234567</post_charge_account>
+				<signature_required>0</signature_required>
+                <signature_cost>6.44</signature_cost>
+                <insurance_step>100.0</insurance_step>
+                <insurance_cost_per_step>1.05</insurance_cost_per_step>
+			</eparcel>
 		</carriers>
 
         <payment>

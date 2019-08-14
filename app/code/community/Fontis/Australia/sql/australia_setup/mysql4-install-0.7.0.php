@@ -22,6 +22,28 @@
 $installer = $this;
 $installer->startSetup();
 
+// Create a database table for eParcel table rates.
+// This table uses the same structure as the normal table rate table.
+$installer->run("
+DROP TABLE IF EXISTS {$this->getTable('australia_eparcel')};
+CREATE TABLE {$this->getTable('australia_eparcel')} (
+  `pk` int(10) unsigned NOT NULL auto_increment,
+  `website_id` int(11) NOT NULL default '0',
+  `dest_country_id` varchar(4) NOT NULL default '0',
+  `dest_region_id` int(10) NOT NULL default '0',
+  `dest_zip` varchar(10) NOT NULL default '',
+  `condition_name` varchar(20) NOT NULL default '',
+  `condition_from_value` decimal(12,4) NOT NULL default '0.0000',
+  `condition_to_value` decimal(12,4) NOT NULL default '0.0000',
+  `price` decimal(12,4) NOT NULL default '0.0000',
+  `price_per_kg` decimal(12,4) NOT NULL default '0.0000',
+  `cost` decimal(12,4) NOT NULL default '0.0000',
+  `delivery_type` varchar(50) NOT NULL default '',
+  PRIMARY KEY  (`pk`),
+  UNIQUE KEY `dest_country` (`website_id`,`dest_country_id`,`dest_region_id`,`dest_zip`,`condition_name`,`condition_to_value`)
+) ENGINE=InnoDB DEFAULT CHARSET=utf8;
+");
+
 // Insert a list of states into the regions database. Magento will then pick
 // these up when displaying addresses and allow the user to select from a drop-down
 // list, rather than having to type them in manually.
