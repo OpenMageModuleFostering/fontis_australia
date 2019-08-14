@@ -70,7 +70,7 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 
 		// Here we get the weight (and convert it to grams) and set some
 		// sensible defaults for other shipping parameters.	
-		$sweight = (float)$request->getPackageWeight() * $this->getConfigData('weight_units');
+		$sweight = (int)((float)$request->getPackageWeight() * (float)$this->getConfigData('weight_units'));
 		$sheight = $swidth = $slength = 100;
 		$shipping_num_boxes = 1;
 
