@@ -30,7 +30,7 @@ class Fontis_Australia_Helper_Bpay extends Mage_Core_Helper_Abstract
 
         $output = '    
         <div id="bpay" style="border: 2px solid rgb(16, 32, 75); margin: 0px; padding: 6px; width: 238px; font-family: Arial,Helvetica,sans-serif; background-color: rgb(255, 255, 255);">
-        <div class="bpayLogo" style="border: 2px solid rgb(20, 44, 97); width: 51px; height 87px; float: left;">
+        <div class="bpayLogo" style="border: 2px solid rgb(20, 44, 97); width: 51px; height: 87px; float: left;">
             <img src="' . Mage::getBaseUrl(Mage_Core_Model_Store::URL_TYPE_SKIN) . 'frontend/default/default/images/fontis/bpay.png' . '" height="82" width="51">
         </div>
         <div class="customerReferenceBox" style="border: 2px solid rgb(20, 44, 97); padding: 0px 8px; height: 87px; width: 158px; margin-left: 60px; margin-bottom: 4px;">
@@ -48,7 +48,7 @@ class Fontis_Australia_Helper_Bpay extends Mage_Core_Helper_Abstract
         } else {
             $output .= '<div>
                 <p class="billerTextHeading" style="font-size: 11px; text-transform: capitalize; color: rgb(20, 44, 97); white-space: nowrap; line-height: 20px; font-weight: bold;">Telephone &amp; Internet Banking &mdash; BPAY&reg;</p>
-                <p class="billerText" style="font-size: 11px; color: rgb(20, 44, 97);">Contact your bank or financial institution to make this payment from your cheque, savings, debit, credit card or transaction account. More info: www.bpay.com.au</p>
+                <p class="billerText" style="font-size: 11px; color: rgb(20, 44, 97);">Contact your bank or financial institution to make this payment from your cheque, savings, debit or transaction account. More info: www.bpay.com.au</p>
             </div>';
         }
         

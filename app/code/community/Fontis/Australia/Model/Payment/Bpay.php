@@ -35,6 +35,11 @@ class Fontis_Australia_Model_Payment_Bpay extends Mage_Payment_Model_Method_Abst
 
 	public function isAvailable($quote = null)
 	{
+        if($this->getConfigData('active') == 0)
+        {
+            return false;
+        }
+        
 		$groupAccess = $this->getConfigData('customer_group_access');
 		$group = $this->getConfigData('customer_group');
 		

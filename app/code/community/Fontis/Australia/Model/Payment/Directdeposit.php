@@ -36,6 +36,11 @@ class Fontis_Australia_Model_Payment_Directdeposit extends Mage_Payment_Model_Me
 
 	public function isAvailable($quote = null)
 	{
+	    if($this->getConfigData('active') == 0)
+        {
+            return false;
+        }
+        
 		$groupAccess = $this->getConfigData('customer_group_access');
 		$group = $this->getConfigData('customer_group');
 		

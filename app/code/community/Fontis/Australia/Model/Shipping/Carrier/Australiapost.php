@@ -39,7 +39,7 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
      * @return Mage_Shipping_Model_Rate_Result
      */
     public function collectRates(Mage_Shipping_Model_Rate_Request $request)
-    {
+    {        
     	// Check if this method is active
 		if (!$this->getConfigFlag('active')) 
 		{
@@ -252,6 +252,8 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 			}
 
 		}
+		
+		Mage::log(print_r($result->asArray(), true), null, 'rates.log');
 				
         return $result;
     }
