@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>1.2.6</version>
+            <version>2.0</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
@@ -32,6 +32,34 @@
             </depends>
         </Fontis_Australia>
     </modules>
+    <crontab>
+        <jobs>
+            <Fontis_Australia_Myshopping>
+                <schedule>
+                    <cron_expr>0 0 * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>australia/myshopping_cron::update</model>
+                </run>
+            </Fontis_Australia_Myshopping>
+            <Fontis_Australia_Shopbot>
+                <schedule>
+                    <cron_expr>0 0 * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>australia/shopbot_cron::update</model>
+                </run>
+            </Fontis_Australia_Shopbot>
+            <Fontis_Australia_Getprice>
+                <schedule>
+                    <cron_expr>0 0 * * *</cron_expr>
+                </schedule>
+                <run>
+                    <model>australia/getprice_cron::update</model>
+                </run>
+            </Fontis_Australia_Getprice>
+        </jobs>
+    </crontab>
     <global>
 		<models>
 			<australia>
@@ -92,6 +120,20 @@
 				    </gst>
 				</methods>
 			</tax>
+            <order>
+                <statuses>
+                    <pending_bpay translate="label"><label>Pending BPAY</label></pending_bpay>
+                    <pending_deposit translate="label"><label>Pending Direct Deposit</label></pending_deposit>
+                </statuses>
+                <states>
+                    <new>
+                        <statuses>
+                            <pending_bpay/>
+                            <pending_deposit/>
+                        </statuses>
+                    </new>
+                </states>
+            </order>
 		</sales>
 		<events>
 			<sales_order_shipment_save_after>
@@ -159,29 +201,76 @@
 		</carriers>
 
         <payment>
-        	<bpay>
-				<active>0</active>
-				<model>australia/payment_bpay</model>
-				<order_status>pending</order_status>
-				<customer_group_access>0</customer_group_access>
-				<customer_group>0</customer_group>
-				<title>BPAY</title>
-				<allowspecific>0</allowspecific>
-				<calculate_using_customerid>0</calculate_using_customerid>
-        	</bpay>
-			<directdeposit_au>
-				<active>0</active>
-				<model>australia/payment_directdeposit</model>
-				<order_status>pending</order_status>
-				<customer_group_access>0</customer_group_access>
-				<customer_group>0</customer_group>			
-				<title>Direct Deposit</title>
-				<account_name></account_name>
-				<account_bsb>000000</account_bsb>
-				<account_number>00000000</account_number>
-				<allowspecific>0</allowspecific>
-				<message>Please quote order number (displayed after checkout confirmation) when making your deposit. Order will be processed once payment has been received.</message>
-        	</directdeposit_au>
+            <bpay>
+                <active>0</active>
+                <model>australia/payment_bpay</model>
+                <order_status>pending</order_status>
+                <customer_group_access>0</customer_group_access>
+                <customer_group>0</customer_group>
+                <title>BPAY</title>
+                <allowspecific>0</allowspecific>
+                <calculate_using_customerid>0</calculate_using_customerid>
+                <accept_credit_cards>1</accept_credit_cards>
+                <message>Payment details will be displayed on order confirmation screen.</message>
+            </bpay>
+            <directdeposit_au>
+                <active>0</active>
+                <model>australia/payment_directdeposit</model>
+                <order_status>pending</order_status>
+                <customer_group_access>0</customer_group_access>
+                <customer_group>0</customer_group>			
+                <title>Direct Deposit</title>
+                <account_name></account_name>
+                <account_bsb>000000</account_bsb>
+                <account_number>00000000</account_number>
+                <allowspecific>0</allowspecific>
+                <message>Please quote order number (displayed after checkout confirmation) when making your deposit. Order will be processed once payment has been received.</message>
+            </directdeposit_au>
         </payment>
+
+        <fontis_feeds>
+            <getpricefeed>
+                <output>getprice-feeds</output>
+                <defaultcategory>Products</defaultcategory>
+                <currency>AUS</currency>
+            </getpricefeed>
+            <shopbotfeed>
+                <output>shopbot-feeds/</output>
+                <defaultcategory>Products</defaultcategory>
+                <m_to_xml_attributes>a:4:{s:18:"_1260239763475_475";a:2:{s:7:"magento";s:12:"manufacturer";s:7:"xmlfeed";s:5:"brand";}s:18:"_1260241020747_747";a:2:{s:7:"magento";s:11:"description";s:7:"xmlfeed";s:11:"description";}s:18:"_1260413375112_112";a:2:{s:7:"magento";s:15:"FONTIS-category";s:7:"xmlfeed";s:8:"category";}s:18:"_1260420319241_241";a:2:{s:7:"magento";s:17:"FONTIS-image-link";s:7:"xmlfeed";s:5:"image";}}</m_to_xml_attributes>
+            </shopbotfeed>
+            <myshopping>
+                <output>myshopping-feeds/</output>
+                <defaultcategory>Products</defaultcategory>
+                <m_to_xml_attributes>a:4:{s:18:"_1260239763475_475";a:2:{s:7:"magento";s:12:"manufacturer";s:7:"xmlfeed";s:5:"brand";}s:18:"_1260241020747_747";a:2:{s:7:"magento";s:11:"description";s:7:"xmlfeed";s:11:"description";}s:18:"_1260413375112_112";a:2:{s:7:"magento";s:15:"FONTIS-category";s:7:"xmlfeed";s:8:"category";}s:18:"_1260420319241_241";a:2:{s:7:"magento";s:17:"FONTIS-image-link";s:7:"xmlfeed";s:5:"image";}}</m_to_xml_attributes>
+            </myshopping>
+        </fontis_feeds>
     </default>
+    <adminhtml>
+        <acl>
+            <resources>
+                <all>
+                    <title>Allow Everything</title>
+                </all>
+                <admin>
+                    <children>
+                        <system>
+                            <children>
+                                <config>
+                                    <children>
+                                        <fontis_australia>
+                                            <title>Australia</title>
+                                        </fontis_australia>
+                                        <fontis_feeds>
+                                            <title>Feeds</title>
+                                        </fontis_feeds>
+                                    </children>
+                                </config>
+                            </children>
+                        </system>
+                    </children>
+                </admin>
+            </resources>
+        </acl>
+    </adminhtml>
 </config>

@@ -21,6 +21,12 @@
  */
 -->
 <config>
+    <tabs>
+        <fontis_extensions translate="label" module="australia">
+            <label>Fontis Extensions</label>
+            <sort_order>1000000</sort_order>
+        </fontis_extensions>
+    </tabs>
     <sections>
         <carriers>
             <groups>
@@ -448,15 +454,6 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </active>
-                        <order_status translate="label">
-                            <label>New order status</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_order_status</source_model>
-                            <sort_order>2</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </order_status>
 						<customer_group_access translate="label">
 							<label>Customer Group Access</label>
 							<frontend_type>select</frontend_type>
@@ -506,7 +503,26 @@
 							<show_in_default>1</show_in_default>
 							<show_in_website>1</show_in_website>
 							<show_in_store>1</show_in_store>
+							<comment>Normally set to NO unless you use BPAY for recurring payments. Guest checkouts are NOT supported if this is set to YES.</comment>
 						</calculate_using_customerid>
+						<accept_credit_cards translate="label">
+	                        <label>Accepts Credit Cards</label>
+	                        <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+	                        <sort_order>63</sort_order>
+	                        <show_in_default>1</show_in_default>
+	                        <show_in_website>1</show_in_website>
+	                        <show_in_store>1</show_in_store>
+	                        <comment>Set to NO if you do not accept credit card payments through BPAY. This simply changes the text presented to the customer.</comment>
+                        </accept_credit_cards>
+                        <message translate="label">
+	                        <label>Message</label>
+	                        <sort_order>64</sort_order>
+	                        <show_in_default>1</show_in_default>
+	                        <show_in_website>1</show_in_website>
+	                        <show_in_store>1</show_in_store>
+	                        <comment>Displayed during checkout. Customise this to notify your customers that they will be presented with BPAY information after checkout.</comment>
+                        </message>
                         <allowspecific translate="label">
                             <label>Payment from applicable countries</label>
                             <frontend_type>allowspecific</frontend_type>
@@ -562,15 +578,6 @@
                             <show_in_website>1</show_in_website>
                             <show_in_store>0</show_in_store>
                         </active>
-                        <order_status translate="label">
-                            <label>New order status</label>
-                            <frontend_type>select</frontend_type>
-                            <source_model>adminhtml/system_config_source_order_status</source_model>
-                            <sort_order>2</sort_order>
-                            <show_in_default>1</show_in_default>
-                            <show_in_website>1</show_in_website>
-                            <show_in_store>0</show_in_store>
-                        </order_status>
 						<customer_group_access translate="label">
 							<label>Customer Group Access</label>
 							<frontend_type>select</frontend_type>
@@ -674,7 +681,14 @@
 	       	</groups>
         </payment>
         
-        <general>
+        <fontis_australia>
+            <label>Australia</label>
+            <tab>fontis_extensions</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>999999</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
         	<groups>
         		<business translate="label">
 					<label>Business Details</label>
@@ -704,6 +718,166 @@
 					</fields>
         		</business>
         	</groups>
-        </general>
+        </fontis_australia>
+
+        <fontis_feeds>
+            <label>Feeds Generator</label>
+            <tab>fontis_extensions</tab>
+            <frontend_type>text</frontend_type>
+            <sort_order>999999</sort_order>
+            <show_in_default>1</show_in_default>
+            <show_in_website>1</show_in_website>
+            <show_in_store>1</show_in_store>
+            <groups>
+                <getpricefeed>
+                    <label>GetPrice</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>0</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </active>
+                        <output translate="label">
+                            <label>Output Filename</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>XML files will be generated into this path.</comment>
+                        </output>
+                        <defaultcategory translate="label">
+                            <label>Default Category</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Products with no category assigned will be assigned this category label.</comment>
+                        </defaultcategory>
+                        <manufacturer translate="label">
+                            <label>Show Manufacturer</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>4</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </manufacturer>
+                        <currency translate="label">
+                            <label>Currency</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>5</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </currency>
+                    </fields>
+                </getpricefeed>
+                <shopbotfeed>
+                    <label>ShopBot</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>0</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </active>
+                        <output translate="label">
+                            <label>Output Path</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>XML files will be generated into this path.</comment>
+                        </output>
+                        <defaultcategory translate="label">
+                            <label>Default Category</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Products with no category assigned will be assigned this category label.</comment>
+                        </defaultcategory>
+                        <m_to_xml_attributes translate="comment">
+                            <label>Attributes to include in product feed</label>
+                            <frontend_model>fontis_australia_block_shopbot</frontend_model>
+                            <backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
+                            <sort_order>25</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment></comment>
+                        </m_to_xml_attributes>
+                    </fields>
+                </shopbotfeed>
+                <myshoppingfeed>
+                    <label>MyShopping</label>
+                    <frontend_type>text</frontend_type>
+                    <sort_order>0</sort_order>
+                    <show_in_default>1</show_in_default>
+                    <show_in_website>1</show_in_website>
+                    <show_in_store>1</show_in_store>
+                    <fields>
+                        <active translate="label">
+                            <label>Enabled</label>
+                            <frontend_type>select</frontend_type>
+                            <source_model>adminhtml/system_config_source_yesno</source_model>
+                            <sort_order>1</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>0</show_in_store>
+                        </active>
+                        <output translate="label">
+                            <label>Output Path</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>2</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>XML files will be generated into this path.</comment>
+                        </output>
+                        <defaultcategory translate="label">
+                            <label>Default Category</label>
+                            <frontend_type>text</frontend_type>
+                            <sort_order>3</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment>Products with no category assigned will be assigned this category label.</comment>
+                        </defaultcategory>
+                        <m_to_xml_attributes translate="comment">
+                            <label>Attributes to include in product feed</label>
+                            <frontend_model>fontis_australia_block_myshopping</frontend_model>
+                            <backend_model>adminhtml/system_config_backend_serialized_array</backend_model>
+                            <sort_order>25</sort_order>
+                            <show_in_default>1</show_in_default>
+                            <show_in_website>1</show_in_website>
+                            <show_in_store>1</show_in_store>
+                            <comment></comment>
+                        </m_to_xml_attributes>
+                    </fields>
+                </myshoppingfeed>
+            </groups>
+        </fontis_feeds>
     </sections>
 </config>
