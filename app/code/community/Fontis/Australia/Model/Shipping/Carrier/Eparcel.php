@@ -65,7 +65,7 @@ class Fontis_Australia_Model_Shipping_Carrier_Eparcel
                if (!empty($rate) && $rate['price'] >= 0) {
                   $method = Mage::getModel('shipping/rate_result_method');
 
-                    $method->setCarrier('matrixrate');
+                    $method->setCarrier('eparcel');
                     $method->setCarrierTitle($this->getConfigData('title'));
 
                     $method->setMethod($rate['delivery_type']);
