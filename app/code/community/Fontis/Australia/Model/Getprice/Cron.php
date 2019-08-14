@@ -22,8 +22,7 @@
 // Callback used by the Magento resource iterator walk() method. Adds a
 // product ID to a static array and calls addProductXmlgetPrice() to
 // generate XML when the array reaches the batch size.
-function addProductXmlCallbackGetPrice($args)
-{
+function addProductXmlCallbackGetPrice($args) {
     Fontis_Australia_Model_GetPrice_Cron::$accumulator[] = $args['row']['entity_id'];
 
     $length = count(Fontis_Australia_Model_GetPrice_Cron::$accumulator);
@@ -34,15 +33,14 @@ function addProductXmlCallbackGetPrice($args)
 
 // Runs a subprocesss to create feed XML for the product IDs in the static
 // array, then empties the array.
-function addProductXmlGetPrice()
-{
+function addProductXmlGetPrice() {
     $length = count(Fontis_Australia_Model_GetPrice_Cron::$accumulator);
     if($length > 0) {
-        Mage::log("Processing product IDs " . Fontis_Australia_Model_GetPrice_Cron::$accumulator[0] .
+        Mage::log("Fontis/Australia_Model_Getprice_Cron: Processing product IDs " . Fontis_Australia_Model_GetPrice_Cron::$accumulator[0] .
                 " to " . Fontis_Australia_Model_GetPrice_Cron::$accumulator[$length - 1]);
         $store_id = Fontis_Australia_Model_GetPrice_Cron::$store->getId();
 
-        $data = exec("php " . Mage::getBaseDir() . "/app/code/community/Fontis/Australia/Model/Getprice/Child.php " .
+        $data = shell_exec("php " . Mage::getBaseDir() . "/app/code/community/Fontis/Australia/Model/Getprice/Child.php " .
                 Mage::getBaseDir() . " '" . serialize(Fontis_Australia_Model_GetPrice_Cron::$accumulator) .
                 "' " . $store_id);
         Fontis_Australia_Model_GetPrice_Cron::$accumulator = array();
@@ -62,20 +60,19 @@ function addProductXmlGetPrice()
                 }
             }
             if(!empty($codes)) {
-                Mage::log("Codes: ".implode(",", $codes));
+                Mage::log("Fontis/Australia_Model_Getprice_Cron: Codes: ".implode(",", $codes));
             }
         } else {
-            Mage::log("Could not unserialize to array:");
+            Mage::log("Fontis/Australia_Model_Getprice_Cron: Could not unserialize to array:");
             Mage::log($data);
             Mage::log($array);
         }
 
-        Mage::log(strlen($data) . " characters returned");
+        Mage::log('Fontis/Australia_Model_Getprice_Cron: ' . strlen($data) . ' characters returned');
     }
 }
 
-class Fontis_Australia_Model_GetPrice_Cron
-{
+class Fontis_Australia_Model_GetPrice_Cron {
     const BATCH_SIZE = 100;
 
     public static $doc;
@@ -84,13 +81,11 @@ class Fontis_Australia_Model_GetPrice_Cron
     public static $accumulator;
     public static $debugCount = 0;
 
-    protected function _construct()
-    {
+    protected function _construct() {
         self::$accumulator = array();
     }
 
-    protected function getPath()
-    {
+    protected function getPath() {
         $path = "";
         $config_path = Mage::getStoreConfig('fontis_feeds/getpricefeed/output');
 
@@ -103,14 +98,12 @@ class Fontis_Australia_Model_GetPrice_Cron
         return str_replace('//', '/', $path);
     }
 
-    public function nonstatic()
-    {
+    public function nonstatic() {
         self::update();
     }
 
-    public static function update()
-    {
-        Mage::log('Fontis/Australia_Model_Getprice_Cron: entered update function');
+    public static function update() {
+        Mage::log('Fontis/Australia_Model_Getprice_Cron: Entered update function');
 
         if (Mage::getStoreConfig('fontis_feeds/getpricefeed/active')) {
             $io = new Varien_Io_File();
@@ -118,41 +111,45 @@ class Fontis_Australia_Model_GetPrice_Cron
 
             $io->open(array('path' => self::getPath()));
 
+            // Loop through all stores:
             foreach(Mage::app()->getStores() as $store) {
+                Mage::log('Fontis/Australia_Model_Getprice_Cron: Processing store: ' . $store->getName());
                 $clean_store_name = str_replace('+', '-', strtolower(urlencode($store->getName())));
-                
+
                 // Write the entire products xml file:
-                Mage::log('Creating GetPrice products file...');
+                Mage::log('Fontis/Australia_Model_Getprice_Cron: Generating All Products XML File');
                 $products_result = self::getProductsXml($store);
                 $io->write($clean_store_name . '-products.xml', $products_result['xml']);
-                
+                Mage::log('Fontis/Australia_Model_Getprice_Cron: Wrote to file: ' . $clean_store_name . '-products.xml', $products_result['xml']);
+
                 // Write the leaf categories xml file:
-                Mage::log('Creating GetPrice categories index file...');
+                Mage::log('Fontis/Australia_Model_Getprice_Cron: Generating Categories XML File');
                 $categories_result = self::getCategoriesXml($store);
                 $io->write($clean_store_name . '-categories.xml', $categories_result['xml']);
+                Mage::log('Fontis/Australia_Model_Getprice_Cron: Wrote to file: ' . $clean_store_name . '-categories.xml', $categories_result['xml']);
 
                 // Write for each leaf category, their products xml file:
                 foreach($categories_result['link_ids'] as $link_id) {
-                    Mage::log("Creating GetPrice category file for ID {$categories_result['link_ids']}...");
+                    Mage::log('Fontis/Australia_Model_Getprice_Cron: Generating Product Category XML File: ' . $link_id);
                     $subcategory_products_result = self::getProductsXml($store, $link_id);
                     $io->write($clean_store_name . '-products-'.$link_id.'.xml', $subcategory_products_result['xml']);
+                    Mage::log('Fontis/Australia_Model_Getprice_Cron: Wrote to file: ' . $clean_store_name . '-products-'.$link_id.'.xml', $subcategory_products_result['xml']);
                 }
             }
 
             $io->close();
         } else {
-            Mage::log('Fontis/Australia_Model_Getprice_Cron: disabled');
+            Mage::log('Fontis/Australia_Model_Getprice_Cron: Disabled');
         }
     }
 
-    public function getCategoriesXml($store)
-    {
+    public function getCategoriesXml($store) {
         $clean_store_name = str_replace('+', '-', strtolower(urlencode($store->getName())));
-        
+
         $result = array();
         $categories = Mage::getModel('catalog/category')->getCollection()
-            ->setStoreId($store->getId())
-            ->addAttributeToFilter('is_active', 1);
+                ->setStoreId($store->getId())
+                ->addAttributeToFilter('is_active', 1);
 
         $categories->load()->getItems();
 
@@ -192,8 +189,7 @@ class Fontis_Australia_Model_GetPrice_Cron
         return $result;
     }
 
-    public function getProductsXml($store, $cat_id = -1)
-    {
+    public function getProductsXml($store, $cat_id = -1) {
         Fontis_Australia_Model_GetPrice_Cron::$store = $store;
         $result = array();
 
@@ -203,11 +199,9 @@ class Fontis_Australia_Model_GetPrice_Cron
         $products->addStoreFilter();
         $products->addAttributeToSelect('*');
         $products->addAttributeToSelect(array('name', 'price', 'image', 'status', 'manufacturer'), 'left');
-        $products->addAttributeToFilter('type_id', 'simple');
+        $products->addAttributeToFilter('status', 1);
+        $products->addAttributeToFilter('visibility', 4);
 
-        Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($products);
-        Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($products);
-        
         if ($cat_id != -1) {
             $products->getSelect()->where("e.entity_id IN (
                 SELECT product_id FROM catalog_category_product WHERE category_id = ".$cat_id."
@@ -224,16 +218,18 @@ class Fontis_Australia_Model_GetPrice_Cron
         self::$doc = new SimpleXMLElement('<store url="' . $storeUrl. '" date="'.$date.'" time="'.$time.'" name="' . $shopName . '"></store>');
         self::$root_node = self::$doc->addChild('products');
 
+        Mage::log('Fontis/Australia_Model_Getprice_Cron: Iterating: ' . $products->getSize() . ' products...');
         Mage::getSingleton('core/resource_iterator')->walk($products->getSelect(), array('addProductXmlCallbackGetPrice'), array('product' => $product));
+        
         // call XML generation function one last time to process remaining batch
         addProductXmlGetPrice();
+        Mage::log('Fontis/Australia_Model_Getprice_Cron: Iteration complete');
 
         $result['xml'] = self::formatSimpleXML(self::$doc);
         return $result;
     }
 
-    public static function formatSimpleXML($doc)
-    {
+    public static function formatSimpleXML($doc) {
         $dom = new DOMDocument('1.0');
         $dom->preserveWhiteSpace = false;
         $dom->formatOutput = true;

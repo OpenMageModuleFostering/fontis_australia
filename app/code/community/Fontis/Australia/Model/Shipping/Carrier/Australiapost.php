@@ -264,9 +264,6 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
     
     protected function _createMethod($request, $method_code, $title, $price, $cost)
     {
-		$shippingPrice = $request->getBaseCurrency()->convert($price, $request->getPackageCurrency());
-		$shippingCost = $request->getBaseCurrency()->convert($cost, $request->getPackageCurrency());
-
 		$method = Mage::getModel('shipping/rate_result_method');
 
 		$method->setCarrier('australiapost');
@@ -275,8 +272,8 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 		$method->setMethod($method_code);
 		$method->setMethodTitle($title);
 
-		$method->setPrice($this->getFinalPriceWithHandlingFee($shippingPrice));
-		$method->setCost($shippingCost);
+		$method->setPrice($this->getFinalPriceWithHandlingFee($price));
+		$method->setCost($cost);
 		
 		return $method;
     }

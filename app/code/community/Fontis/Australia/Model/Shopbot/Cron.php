@@ -22,8 +22,7 @@
 // Callback used by the Magento resource iterator walk() method. Adds a
 // product ID to a static array and calls addProductXmlShopBot() to
 // generate XML when the array reaches the batch size.
-function addProductXmlCallbackShopBot($args)
-{
+function addProductXmlCallbackShopBot($args) {
     Fontis_Australia_Model_ShopBot_Cron::$accumulator[] = $args['row']['entity_id'];
 
     $length = count(Fontis_Australia_Model_ShopBot_Cron::$accumulator);
@@ -34,15 +33,14 @@ function addProductXmlCallbackShopBot($args)
 
 // Runs a subprocesss to create feed XML for the product IDs in the static
 // array, then empties the array.
-function addProductXmlShopBot()
-{
+function addProductXmlShopBot() {
     $length = count(Fontis_Australia_Model_ShopBot_Cron::$accumulator);
     if($length > 0) {
-        Mage::log("Processing product IDs " . Fontis_Australia_Model_ShopBot_Cron::$accumulator[0] .
+        Mage::log("Fontis/Australia_Model_Shopbot_Cron: Processing product IDs " . Fontis_Australia_Model_ShopBot_Cron::$accumulator[0] .
                 " to " . Fontis_Australia_Model_ShopBot_Cron::$accumulator[$length - 1]);
         $store_id = Fontis_Australia_Model_ShopBot_Cron::$store->getId();
 
-        $data = exec("php " . Mage::getBaseDir() . "/app/code/community/Fontis/Australia/Model/Shopbot/Child.php " .
+        $data = shell_exec("php " . Mage::getBaseDir() . "/app/code/community/Fontis/Australia/Model/Shopbot/Child.php " .
                 Mage::getBaseDir() . " '" . serialize(Fontis_Australia_Model_ShopBot_Cron::$accumulator) .
                 "' " . $store_id);
         Fontis_Australia_Model_ShopBot_Cron::$accumulator = array();
@@ -62,21 +60,20 @@ function addProductXmlShopBot()
                 }
             }
             if(!empty($codes)) {
-                Mage::log("Codes: ".implode(",", $codes));
+                Mage::log("Fontis/Australia_Model_Shopbot_Cron: Codes: ".implode(",", $codes));
             }
         } else {
-            Mage::log("Could not unserialize to array:");
+            Mage::log("Fontis/Australia_Model_Shopbot_Cron: Could not unserialize to array:");
             Mage::log($data);
             Mage::log($array);
         }
-        
-        Mage::log(strlen($data) . " characters returned");
+
+        Mage::log('Fontis/Australia_Model_Shopbot_Cron: ' . strlen($data) . " characters returned");
     }
 }
 
 
-class Fontis_Australia_Model_ShopBot_Cron
-{
+class Fontis_Australia_Model_ShopBot_Cron {
     const BATCH_SIZE = 100;
 
     public static $doc;
@@ -85,13 +82,11 @@ class Fontis_Australia_Model_ShopBot_Cron
     public static $accumulator;
     public static $debugCount = 0;
 
-    protected function _construct()
-    {
+    protected function _construct() {
         self::$accumulator = array();
     }
 
-    protected function getPath()
-    {
+    protected function getPath() {
         $path = "";
         $config_path = Mage::getStoreConfig('fontis_feeds/shopbotfeed/output');
 
@@ -104,9 +99,12 @@ class Fontis_Australia_Model_ShopBot_Cron
         return str_replace('//', '/', $path);
     }
 
-    public static function update()
-    {
-        Mage::log('Fontis/Australia_Model_Shopbot_Cron: entered update function');
+    public function nonstatic() {
+        self::update();
+    }
+
+    public static function update() {
+        Mage::log('Fontis/Australia_Model_Shopbot_Cron: Entered update function');
         if (Mage::getStoreConfig('fontis_feeds/shopbotfeed/active')) {
             $io = new Varien_Io_File();
             $io->setAllowCreateFolders(true);
@@ -114,30 +112,28 @@ class Fontis_Australia_Model_ShopBot_Cron
             $io->open(array('path' => self::getPath()));
 
             foreach(Mage::app()->getStores() as $store) {
-                Mage::log('for each store');
+                Mage::log('Fontis/Australia_Model_Shopbot_Cron: Processing store: ' . $store->getName());
                 $clean_store_name = str_replace('+', '-', strtolower(urlencode($store->getName())));
-                Fontis_Australia_Model_ShopBot_Cron::$debugCount = 0;                
+
+                Fontis_Australia_Model_ShopBot_Cron::$debugCount = 0;
+                
+                // Write the entire products xml file:
+                Mage::log('Fontis/Australia_Model_Shopbot_Cron: Generating All Products XML File');
                 $products_result = self::getProductsXml($store);
 
-                // Write the entire products xml file:
                 $filename = $clean_store_name . '-products.xml';
                 $io->write($filename, $products_result['xml']);
-                Mage::log("Wrote " . Fontis_Australia_Model_ShopBot_Cron::$debugCount
+                Mage::log("Fontis/Australia_Model_Shopbot_Cron: Wrote " . Fontis_Australia_Model_ShopBot_Cron::$debugCount
                         . " records to " . self::getPath() . $filename);
             }
 
             $io->close();
+        } else {
+            Mage::log('Fontis/Australia_Model_Shopbot_Cron: Disabled');
         }
     }
 
-    public function nonstatic()
-    {
-        self::update();
-    }
-
-    public function getProductsXml($store)
-    {
-        Mage::log('new getproductsxml');
+    public function getProductsXml($store) {
         Fontis_Australia_Model_ShopBot_Cron::$store = $store;
 
         $result = array();
@@ -147,13 +143,13 @@ class Fontis_Australia_Model_ShopBot_Cron
         $products->setStoreId($store);
         $products->addStoreFilter();
         $products->addAttributeToSelect('*');
+        $products->addAttributeToFilter('status', 1);
+        $products->addAttributeToFilter('visibility', 4);
 
         $attributes_select_array = array('name', 'price', 'image', 'status');
         $linkedAttributes = @unserialize(Mage::getStoreConfig('fontis_feeds/shopbotfeed/m_to_xml_attributes', $store->getId()));
-        if(!empty($linkedAttributes))
-        {
-            foreach($linkedAttributes as $la)
-            {
+        if(!empty($linkedAttributes)) {
+            foreach($linkedAttributes as $la) {
                 if (strpos($la['magento'], 'FONTIS') === false) {
                     $attributes_select_array[] = $la['magento'];
                 }
@@ -162,10 +158,6 @@ class Fontis_Australia_Model_ShopBot_Cron
         Mage::log(var_export($attributes_select_array, true));
 
         $products->addAttributeToSelect($attributes_select_array, 'left');
-        $products->addAttributeToFilter('type_id', 'simple');
-
-        Mage::getSingleton('catalog/product_status')->addVisibleFilterToCollection($products);
-        Mage::getSingleton('catalog/product_visibility')->addVisibleInCatalogFilterToCollection($products);
 
         $storeUrl = $store->getBaseUrl();
         $shopName = $store->getName();
@@ -175,12 +167,13 @@ class Fontis_Australia_Model_ShopBot_Cron
         self::$doc = new SimpleXMLElement('<store url="' . $storeUrl. '" date="'.$date.'" time="'.$time.'" name="' . $shopName . '"></store>');
         self::$root_node = self::$doc->addChild('products');
 
-        Mage::log('about to walk');
+        Mage::log('Fontis/Australia_Model_Shopbot_Cron: Iterating: ' . $products->getSize() . ' products...');
         Mage::getSingleton('core/resource_iterator')->walk($products->getSelect(), array('addProductXmlCallbackShopBot'));
+
         // call XML generation function one last time to process remaining batch
         addProductXmlShopBot();
-        Mage::log('walked');
-        
+        Mage::log('Fontis/Australia_Model_Shopbot_Cron: Iteration complete');
+
         $dom = new DOMDocument('1.0');
         $dom->preserveWhiteSpace = false;
         $dom->formatOutput = true;

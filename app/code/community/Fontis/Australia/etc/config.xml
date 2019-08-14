@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>2.0.3</version>
+            <version>2.0.7</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
@@ -232,16 +232,19 @@
             <getpricefeed>
                 <output>getprice-feeds</output>
                 <defaultcategory>Products</defaultcategory>
+                <include_all_products>1</include_all_products>
                 <currency>AUS</currency>
             </getpricefeed>
             <shopbotfeed>
                 <output>shopbot-feeds/</output>
                 <defaultcategory>Products</defaultcategory>
+                <include_all_products>1</include_all_products>
                 <m_to_xml_attributes>a:4:{s:18:"_1260239763475_475";a:2:{s:7:"magento";s:12:"manufacturer";s:7:"xmlfeed";s:5:"brand";}s:18:"_1260241020747_747";a:2:{s:7:"magento";s:11:"description";s:7:"xmlfeed";s:11:"description";}s:18:"_1260413375112_112";a:2:{s:7:"magento";s:15:"FONTIS-category";s:7:"xmlfeed";s:8:"category";}s:18:"_1260420319241_241";a:2:{s:7:"magento";s:17:"FONTIS-image-link";s:7:"xmlfeed";s:5:"image";}}</m_to_xml_attributes>
             </shopbotfeed>
             <myshopping>
                 <output>myshopping-feeds/</output>
                 <defaultcategory>Products</defaultcategory>
+                <include_all_products>1</include_all_products>
                 <m_to_xml_attributes>a:4:{s:18:"_1260239763475_475";a:2:{s:7:"magento";s:12:"manufacturer";s:7:"xmlfeed";s:5:"brand";}s:18:"_1260241020747_747";a:2:{s:7:"magento";s:11:"description";s:7:"xmlfeed";s:11:"description";}s:18:"_1260413375112_112";a:2:{s:7:"magento";s:15:"FONTIS-category";s:7:"xmlfeed";s:8:"category";}s:18:"_1260420319241_241";a:2:{s:7:"magento";s:17:"FONTIS-image-link";s:7:"xmlfeed";s:5:"image";}}</m_to_xml_attributes>
             </myshopping>
         </fontis_feeds>

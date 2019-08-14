@@ -30,11 +30,58 @@ $store_id = $argv[3];
 require_once $mage_path . '/app/Mage.php';
 Mage::app($store_id);
 
+Mage::log('Fontis/Australia_Model_Shopbot_Child: Successfully entered child process');
+
+$_SERVER['SCRIPT_NAME'] = $_SERVER['PHP_SELF'] = $mage_path . "/app/code/community/Fontis/Australia/Model/Shopbot/Child.php";
+
+// Check and assign mode
+if (Mage::getStoreConfig('fontis_feeds/shopbotfeed/include_all_products') == 1) {
+    $include_all = true;
+} else {
+    $include_all = false;
+}
+
 // This array is translated into XML when fed back to the cron parent PHP.
 $products = array();
 foreach(unserialize($product_ids) as $product_id) {
+
     // Load product, tax helper and generate final price information
     $product = Mage::getModel('catalog/product')->load($product_id);
+
+    // Check for overrride attribute
+    // Fetch override attribute
+    $override_attribute_code = Mage::getStoreConfig('fontis_feeds/shopbotfeed/custom_filter_attribute');
+
+    Mage::log('Fontis/Australia_Model_Shopbot_Child: Override attribute: ' . $override_attribute_code);
+    
+    // Check product for that attribute
+    if ($override_attribute_code != '0') {
+        Mage::log('Fontis/Australia_Model_Shopbot_Child: Attempting to load attribute value');
+        $attribute_value = $product->getResource()->getAttribute($override_attribute_code)->getFrontend()->getValue($product);
+        Mage::log('Fontis/Australia_Model_Shopbot_Child: Attribute value: ' . $attribute_value);
+
+        if ($attribute_value === '' || $attribute_value === 0 || $attribute_value === '0' || strtolower($attribute_value) == 'no') {
+            $override_attribute = false;
+        } else {
+            $override_attribute = true;
+        }
+    } else {
+        Mage::log('Fontis/Australia_Model_Shopbot_Child: No override attribute set');
+        $override_attribute = false;
+    }
+
+    // If mode is includeall and override is true don't include this product
+    if ($include_all && $override_attribute) {
+        Mage::log('Fontis/Australia_Model_Shopbot_Child: Skipping due to include_all && override_attribute');
+        continue;
+    }
+
+    // If mode is excludeall and override is false don't include this product
+    if (!$include_all && !$override_attribute) {
+        Mage::log('Fontis/Australia_Model_Shopbot_Child: Skipping due to !include_all && !override_attribute');
+        continue;
+    }
+
     $tax = Mage::helper('tax');
     $final_price = $tax->getPrice($product, $product->getFinalPrice(), true);
 
@@ -52,16 +99,14 @@ foreach(unserialize($product_ids) as $product_id) {
     }
 
     $linkedAttributes = @unserialize(Mage::getStoreConfig('fontis_feeds/shopbotfeed/m_to_xml_attributes', $store_id));
-    if(!empty($linkedAttributes))
-    {
-        foreach($linkedAttributes as $la)
-        {
+    if(!empty($linkedAttributes)) {
+        foreach($linkedAttributes as $la) {
             $magentoAtt = $la['magento'];
             $xmlAtt = $la['xmlfeed'];
 
             if ($magentoAtt == "manufacturer") {
                 $manufacturer_name = $product->getResource()->
-                    getAttribute('manufacturer')->getFrontend()->getValue($product);
+                        getAttribute('manufacturer')->getFrontend()->getValue($product);
 
                 if ($manufacturer_name != 'No') {
                     $array['manufacturer'] = $manufacturer_name;
@@ -82,9 +127,9 @@ foreach(unserialize($product_ids) as $product_id) {
                         $array['category_name'] = $c->getName();
 
                         $loaded_categories = Mage::getModel('catalog/category')
-                            ->getCollection()
-                            ->addIdFilter(array($c->getId()))
-                            ->addAttributeToSelect(array('name'), 'inner')->load();
+                                ->getCollection()
+                                ->addIdFilter(array($c->getId()))
+                                ->addAttributeToSelect(array('name'), 'inner')->load();
 
                         foreach($loaded_categories as $loaded_category) {
                             $array['category_name'] = $loaded_category->getName();
