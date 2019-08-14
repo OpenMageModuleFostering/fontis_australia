@@ -23,7 +23,7 @@ $installer = $this;
 $installer->startSetup();
 
 $installer->run("
-ALTER TABLE `australia_eparcel` DROP INDEX `dest_country`, ADD UNIQUE `dest_country` ( `website_id` , `dest_country_id` , `dest_region_id` , `dest_zip` , `condition_name` , `condition_to_value` , `delivery_type`)
+ALTER TABLE {$this->getTable('australia_eparcel')} DROP INDEX `dest_country`, ADD UNIQUE `dest_country` ( `website_id` , `dest_country_id` , `dest_region_id` , `dest_zip` , `condition_name` , `condition_to_value` , `delivery_type`)
 ");
 
 $installer->endSetup();
