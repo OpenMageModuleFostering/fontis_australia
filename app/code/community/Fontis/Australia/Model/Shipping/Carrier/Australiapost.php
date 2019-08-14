@@ -116,11 +116,15 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 						// Insurance cost is $1.25 per $100 or part thereof. First $100 is
 						// included in normal registered post costs.
 						$insurance = (ceil($packageValue / 100) - 1) * 1.25;
-						$charge += $insurance;
+						
+						// Only add a new method if the insurance is different
+						if($insurance > 0) {
+						    $charge += $insurance;
 					
-						$title = $this->getConfigData('name') . " " . ucfirst(strtolower($shipping_method)) . ' with Extra Cover';
-						$method = $this->_createMethod($request, $shipping_method, $title, $charge, $charge);
-						$result->append($method);
+						    $title = $this->getConfigData('name') . " " . ucfirst(strtolower($shipping_method)) . ' with Extra Cover';
+						    $method = $this->_createMethod($request, $shipping_method . '_EC', $title, $charge, $charge);
+						    $result->append($method);
+						}
 					}
 					else
 					{
@@ -300,15 +304,15 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 		// Construct the appropriate URL and send all the information
 		// to the Australia Post DRC.
 		$url = "http://drc.edeliver.com.au/ratecalc.asp?" . 
-			"Pickup_Postcode=" . $fromPostCode .
-			"&Destination_Postcode=" . $toPostCode .
-			"&Country=" . $destCountry .
-			"&Weight=" . $weight .
-			"&Service_Type=" . $service . 
-			"&Height=" . $height . 
-			"&Width=" . $width . 
-			"&Length=" . $length .
-			"&Quantity=" . $num_boxes;
+			"Pickup_Postcode=" . rawurlencode($fromPostCode) .
+			"&Destination_Postcode=" . rawurlencode($toPostCode) .
+			"&Country=" . rawurlencode($destCountry) .
+			"&Weight=" . rawurlencode($weight) .
+			"&Service_Type=" . rawurlencode($service) . 
+			"&Height=" . rawurlencode($height) . 
+			"&Width=" . rawurlencode($width) . 
+			"&Length=" . rawurlencode($length) .
+			"&Quantity=" . rawurlencode($num_boxes);
 
 		if(ini_get('allow_url_fopen'))
         {
