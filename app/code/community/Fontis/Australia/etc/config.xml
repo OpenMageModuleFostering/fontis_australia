@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>1.2.4</version>
+            <version>1.2.5</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
@@ -126,7 +126,7 @@
 	<default>
 		<carriers>
 			<australiapost>
-				<active>1</active>
+				<active>0</active>
 				<sallowspecific>0</sallowspecific>
 				<model>australia/shipping_carrier_australiapost</model>
 				<title>Australia Post</title>
@@ -170,7 +170,7 @@
 				<calculate_using_customerid>0</calculate_using_customerid>
         	</bpay>
 			<directdeposit_au>
-				<active>1</active>
+				<active>0</active>
 				<model>australia/payment_directdeposit</model>
 				<order_status>pending</order_status>
 				<customer_group_access>0</customer_group_access>

@@ -23,15 +23,15 @@
     <ul id="payment_form_<?=$this->getMethodCode()?>" style="display:none">
         <li>
             <div class="input-box">
-                <?if ($this->getMethod()->getAccountName()):?>
-                    <?=$this->__('<label>Account Name</label>: %s', $this->getMethod()->getAccountName())?><br />
-                <?endif;?>
-                <?if ($this->getMethod()->getAccountBSB()):?>
-                    <?=$this->__('<label>Account BSB</label>: %s', $this->getMethod()->getAccountBSB())?><br />
-                <?endif;?>
-                <?if ($this->getMethod()->getAccountNumber()):?>
-                    <?=$this->__('<label>Account Number</label>: %s', $this->getMethod()->getAccountNumber())?><br />
-                <?endif;?>
+                <?php if ($this->getMethod()->getAccountName()): ?>
+                    <?php echo $this->__('<label>Account Name</label>: %s', $this->getMethod()->getAccountName()); ?><br />
+                <?php endif; ?>
+                <?php if ($this->getMethod()->getAccountBSB()): ?>
+                    <?php echo $this->__('<label>Account BSB</label>: %s', $this->getMethod()->getAccountBSB()); ?><br />
+                <?php endif; ?>
+                <?php if ($this->getMethod()->getAccountNumber()): ?>
+                    <?php echo $this->__('<label>Account Number</label>: %s', $this->getMethod()->getAccountNumber()); ?><br />
+                <?php endif; ?>
             </div>
         </li>
     </ul>

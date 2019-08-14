@@ -21,11 +21,11 @@
 ?>
 <div>
 	<p>
-	<?if ($this->getMethod()->getBillerCode()):?>
-		<?=$this->__('<b>Biller Code</b>: %s', $this->getMethod()->getBillerCode())?><br />
-	<?endif;?>
-	<?if ($this->getMethod()->getRef()):?>
-		<?=$this->__('<b>Ref</b>: %s', $this->getMethod()->getRef())?><br />
-	<?endif;?>
+	<?php if ($this->getMethod()->getBillerCode()): ?>
+		<?php echo $this->__('<b>Biller Code</b>: %s', $this->getMethod()->getBillerCode()); ?><br />
+	<?php endif; ?>
+	<?php if ($this->getMethod()->getRef()): ?>
+		<?php echo $this->__('<b>Ref</b>: %s', $this->getMethod()->getRef()); ?><br />
+	<?php endif; ?>
 	</p>
 </div>
