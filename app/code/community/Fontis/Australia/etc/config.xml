@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>2.2.4</version>
+            <version>2.2.5</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
@@ -83,9 +83,6 @@
             <australia_mysql4>
                 <class>Fontis_Australia_Model_Mysql4</class>
                 <entities>
-                    <australia_postcode>
-                        <table>australia_postcode</table>
-                    </australia_postcode>
                     <eparcel>
                         <table>australia_eparcel</table>
                     </eparcel>
