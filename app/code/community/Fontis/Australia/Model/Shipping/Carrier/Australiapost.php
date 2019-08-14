@@ -344,7 +344,11 @@ class Fontis_Australia_Model_Shipping_Carrier_Australiapost
 		foreach($drc_result as $vals)
 		{
 			$tokens = split("=", $vals);
-			$result[$tokens[0]] = trim($tokens[1]);
+			if(isset($tokens[1])) {
+    			$result[$tokens[0]] = trim($tokens[1]);
+    	    } else {
+    	        return array('err_msg' => 'Parsing error on Australia Post results');
+    	    }
 		}
 		
 		return $result;
