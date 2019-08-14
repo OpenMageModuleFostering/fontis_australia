@@ -1,0 +1,69 @@
+<?xml version="1.0"?>
+<!--
+/**
+ * Fontis Info Extension
+ *
+ * NOTICE OF LICENSE
+ *
+ * This source file is subject to the Open Software License (OSL 3.0)
+ * that is bundled with this package in the file LICENSE.txt.
+ * It is also available through the world-wide-web at this URL:
+ * http://opensource.org/licenses/osl-3.0.php
+ *
+ * @category   Fontis
+ * @package    Fontis_Info
+ * @author     Jeremy Champion
+ * @author     Matthew Gamble
+ * @copyright  Copyright (c) 2014 Fontis Pty. Ltd. (http://www.fontis.com.au)
+ * @license    http://opensource.org/licenses/osl-3.0.php  Open Software License (OSL 3.0)
+ */
+ -->
+<config>
+    <modules>
+        <Fontis_Info>
+            <version>1.0.0</version>
+        </Fontis_Info>
+    </modules>
+    <global>
+        <blocks>
+            <fontis_info>
+                <class>Fontis_Info_Block</class>
+            </fontis_info>
+        </blocks>
+        <models>
+            <fontis_info>
+                <class>Fontis_Info_Model</class>
+                <resourceModel>fontis_info_mysql4</resourceModel>
+            </fontis_info>
+        </models>
+        <helpers>
+            <fontis_info>
+                <class>Fontis_Info_Helper</class>
+            </fontis_info>
+        </helpers>
+        <events>
+            <admin_session_user_login_success>
+                <observers>
+                    <fontis_info>
+                        <class>fontis_info/info</class>
+                        <method>update</method>
+                    </fontis_info>
+                </observers>
+            </admin_session_user_login_success>
+        </events>
+    </global>
+    <default>
+        <fontis_info>
+            <settings>
+                <minimum_severity_level>1</minimum_severity_level>
+            </settings>
+        </fontis_info>
+    </default>
+    <phpunit>
+        <suite>
+            <modules>
+                <Fontis_Info />
+            </modules>
+        </suite>
+    </phpunit>
+</config>
