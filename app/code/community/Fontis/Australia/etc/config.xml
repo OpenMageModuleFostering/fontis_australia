@@ -23,7 +23,7 @@
 <config>
     <modules>
         <Fontis_Australia>
-            <version>0.8.0</version>
+            <version>1.0</version>
             <depends>
                 <Mage_Shipping />
                 <Mage_Payment />
@@ -95,6 +95,13 @@
                 </args>
             </australia>
         </routers>
+		<layout>
+			<updates>
+				<australia module="Fontis_Australia">
+					<file>fontis_australia.xml</file>
+				</australia>
+			</updates>
+		</layout>
     </frontend>
 	<default>
 		<carriers>

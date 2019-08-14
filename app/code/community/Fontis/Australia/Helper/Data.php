@@ -24,5 +24,41 @@
  */
 class Fontis_Australia_Helper_Data extends Mage_Core_Helper_Abstract
 {
+    const MAX_QUERY_LEN = 100;
+
+    protected $_queryText;
+
+	/**
+	 * Gets the query text for city lookups in the postcode database.
+	 */
+    public function getQueryText()
+    {
+        if (is_null($this->_queryText)) {
+            if($this->_getRequest()->getParam('billing')) {
+            	$tmp = $this->_getRequest()->getParam('billing');
+            	$this->_queryText = $tmp['city'];
+            } else if($this->_getRequest()->getParam('shipping')) {
+            	$tmp = $this->_getRequest()->getParam('shipping');
+            	$this->_queryText = $tmp['city'];
+            } else {
+            	$this->_queryText = $this->_getRequest()->getParam('city');
+            }
+            $this->_queryText = trim($this->_queryText);
+            if (Mage::helper('core/string')->strlen($this->_queryText) > self::MAX_QUERY_LEN) {
+                $this->_queryText = Mage::helper('core/string')->substr($this->_queryText, 0, self::MAX_QUERY_LEN);
+            }
+        }
+        return $this->_queryText;
+    }
+    
+    public function getQueryCountry()
+    {
+    	return $this->_queryText = $this->_getRequest()->getParam('country');
+    }
+
+	public function getCitySuggestUrl()
+	{
+		return $this->_getUrl('australia/ajax/suggest');
+	}
 
 } 
