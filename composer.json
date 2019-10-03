@@ -1,16 +1,19 @@
 {
-    "name": "OpenMageModuleFostering/Fontis_Australia",
+    "name": "OpenMageModuleFostering\/Fontis_Australia",
     "type": "magento-module",
     "license": "OSL-3.0",
     "homepage": "",
     "description": "Adds Australian states and territories, support for Australia Post and eParcel shipping, direct deposit and BPAY payment methods, and postcode autocomplete for Australian stores.",
     "authors": [
-    {
-        "name": "Fontis",
-        "email": "magento@fontis.com.au"
-    }
-],
+        {
+            "name": "Fontis",
+            "email": "magento@fontis.com.au"
+        }
+    ],
     "suggest": {
-        "magento-hackathon/magento-composer-installer": "*"
-    }
+        "magento-hackathon\/magento-composer-installer": "*"
+    },
+    "keywords": [
+        "openmage-module"
+    ]
 }
